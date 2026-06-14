@@ -12,6 +12,7 @@ import (
 	"github.com/striter-no/softgo/api/assets"
 	"github.com/striter-no/softgo/api/keyboard"
 	"github.com/striter-no/softgo/api/mouse"
+	textures "github.com/striter-no/softgo/loader"
 
 	"github.com/striter-no/softgo/render"
 	"github.com/striter-no/stg/graphics"
@@ -64,15 +65,12 @@ func main() {
 	defer s.End()
 	s.Init()
 
-	mesh, err := assets.LoadOBJ("./assets/plane.obj")
-	if err != nil {
-		panic(err)
-	}
-
 	tex := &render.Texture{
 		Width: 312, Height: 312,
 		Pixels: generateCheckerboard(312, 312),
 	}
+
+	tex2 := textures.ConvertImageToTexture("./assets/onigiri.jpg")
 
 	s.FragShader = api.NewFragShader(fragShader)
 	s.VertexShader = api.NewVertexShader(vertShader)
@@ -83,6 +81,9 @@ func main() {
 
 	var tick int64
 	// var ftick int
+	mesh1, _ := assets.LoadOBJ("./assets/suzanne.obj")
+	mesh2, _ := assets.LoadOBJ("./assets/cube.obj")
+
 	for s.IsOpen() {
 		winMouse.PollEvents()
 		winKeyboard.PollEvents()
@@ -90,31 +91,35 @@ func main() {
 		aspect := float32(s.Screen.Width) / (float32(s.Screen.Height))
 		camera.UpdateOnHID(aspect)
 
+		s.Clear()
+
+		// first model --------------------
 		angle := float32(tick) * 0.001
-		modelMatrix := mgl32.HomogRotate3DY(angle)
-		scaleMatrix := mgl32.Scale3D(2.5, 2.5, 2.5)
 
-		s.VertexShader.SetUniform("model", &modelMatrix)
+		modelMatrix1 := mgl32.Translate3D(-2.0, 0, 0).Mul4(mgl32.HomogRotate3DY(angle))
+		mvp1 := camera.VP.Mul4(modelMatrix1)
 
-		finalMVP := camera.VP.Mul4(modelMatrix).Mul4(scaleMatrix)
+		s.VertexShader.SetUniform("mvp", &mvp1)
+		s.VertexShader.SetUniform("model", &modelMatrix1)
+		s.FragShader.SetUniform("tex", tex)
 
-		s.VertexShader.SetUniform("mvp", &finalMVP)
+		s.DrawCall(mesh1)
 
-		// if tick%7 == 0 {
-		// 	s.FragShader.SetUniform("tex", &anim.Frames[ftick%len(anim.Frames)])
-		// 	ftick++
-		// }
+		// second model --------------------
+		modelMatrix2 := mgl32.Translate3D(2.0, 0, 0).Mul4(mgl32.HomogRotate3DY(-angle * 2))
+		mvp2 := camera.VP.Mul4(modelMatrix2)
 
-		for i := range mesh {
-			s.FeedTBO(mesh[i])
-		}
+		s.VertexShader.SetUniform("mvp", &mvp2)
+		s.VertexShader.SetUniform("model", &modelMatrix2)
+		s.FragShader.SetUniform("tex", tex2)
 
-		if err := s.Blit(); err != nil {
-			panic(err)
-		}
+		s.DrawCall(mesh2)
 
-		s.Screen.SetText(0, 0, fmt.Sprintf("FPS: %f", s.CurrentFPS), graphics.NewFGPixel(255, 255, 255, ""))
-		s.Screen.Blit()
+		// drawing all meshes --------------------
+		s.Present()
+
+		s.Screen.SetText(0, 0, fmt.Sprintf("FPS: %.1f", s.CurrentFPS), graphics.NewFGPixel(255, 255, 255, ""))
+		s.Screen.Blit() // drawing to the terminal
 
 		tick++
 	}

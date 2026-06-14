@@ -4,7 +4,11 @@ import (
 	"image"
 	"image/draw"
 	"image/gif"
+	"log"
 	"os"
+
+	_ "image/jpeg"
+	_ "image/png"
 
 	"github.com/striter-no/softgo/render"
 	"github.com/ungerik/go3d/vec4"
@@ -48,6 +52,36 @@ func ConvertGIFToAnimation(filename string) (*Animation, error) {
 	}
 
 	return anim, nil
+}
+
+func getImageFromFilePath(filePath string) (image.Image, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	img, _, err := image.Decode(f)
+	return img, err
+}
+
+func ConvertImageToTexture(filename string) *render.Texture {
+	img, err := getImageFromFilePath(filename)
+	if err != nil {
+		log.Printf("Failed to get image from path '%s': %v", filename, err)
+		return nil
+	}
+
+	if rgba, ok := img.(*image.RGBA); ok {
+		return rgbaToTexture(rgba)
+	}
+
+	b := img.Bounds()
+	dst := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+
+	draw.Draw(dst, dst.Bounds(), img, b.Min, draw.Src)
+
+	return rgbaToTexture(dst)
 }
 
 func rgbaToTexture(img *image.RGBA) *render.Texture {

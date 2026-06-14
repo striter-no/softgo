@@ -19,7 +19,6 @@ type RenderScreen struct {
 	Screen     *graphics.Screen
 	fpsCounter *FPSCounter
 
-	tbos         []render.TBO
 	FragShader   *FragmentShader
 	VertexShader *VertexShader
 
@@ -57,29 +56,16 @@ func (s *RenderScreen) End() {
 	s.Screen.ExitAlt()
 }
 
-func (s *RenderScreen) FeedTBO(tbo render.TBO) {
-	s.tbos = append(s.tbos, tbo)
-}
-
 func (s *RenderScreen) IsOpen() bool {
 	return s.Screen.IsRunning()
 }
 
-func (s *RenderScreen) Blit() error {
-	if s.FragShader == nil || s.VertexShader == nil {
-		return errors.New("No fragment or vertex shader set")
-	}
-
+func (s *RenderScreen) Clear() error {
 	if err := s.Screen.ClearPixels(); err != nil {
 		return err
 	}
 
 	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
-
-	if s.SSAAFactor < 1 {
-		s.SSAAFactor = 1
-	}
-
 	ssaaWidth := int(fw) * s.SSAAFactor
 	ssaaHeight := int(fh) * s.SSAAFactor
 	numSsaaPixels := ssaaWidth * ssaaHeight
@@ -88,10 +74,23 @@ func (s *RenderScreen) Blit() error {
 		s.ssaaBuffer = make([]vec3.T, numSsaaPixels)
 		s.zBuffer = make([]float32, numSsaaPixels)
 	}
+
 	for i := range s.ssaaBuffer {
-		s.ssaaBuffer[i] = vec3.T{0.8, 0.8, 0.8}
+		s.ssaaBuffer[i] = vec3.T{0.1, 0.1, 0.1}
 		s.zBuffer[i] = math.MaxFloat32
 	}
+	return nil
+}
+
+func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
+	if s.FragShader == nil || s.VertexShader == nil {
+		return errors.New("No fragment or vertex shader set")
+	}
+
+	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
+
+	ssaaWidth := int(fw) * s.SSAAFactor
+	ssaaHeight := int(fh) * s.SSAAFactor
 
 	checkDepth := func(x, y int, z float32) bool {
 		if x < 0 || x >= ssaaWidth || y < 0 || y >= ssaaHeight {
@@ -122,7 +121,7 @@ func (s *RenderScreen) Blit() error {
 		s.ssaaBuffer[y*ssaaWidth+x] = vec3.T{frag[0], frag[1], frag[2]}
 	}
 
-	for _, tbo := range s.tbos {
+	for _, tbo := range mesh {
 		vert0 := s.VertexShader.Perform(&tbo.V0, &tbo.N0, &tbo.C0, &tbo.UV0, s.VertexShader)
 		vert1 := s.VertexShader.Perform(&tbo.V1, &tbo.N1, &tbo.C1, &tbo.UV1, s.VertexShader)
 		vert2 := s.VertexShader.Perform(&tbo.V2, &tbo.N2, &tbo.C2, &tbo.UV2, s.VertexShader)
@@ -166,41 +165,32 @@ func (s *RenderScreen) Blit() error {
 		}
 	}
 
+	return nil
+}
+
+func (s *RenderScreen) Present() {
+	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
+	ssaaWidth := int(fw) * s.SSAAFactor
 	invSamples := 1.0 / float32(s.SSAAFactor*s.SSAAFactor)
+
 	for y := 0; y < int(fh); y++ {
 		for x := 0; x < int(fw); x++ {
-
 			if s.SSAAFactor == 1 {
-				idx := y*ssaaWidth + x
-				c := s.ssaaBuffer[idx]
-				s.Screen.SetPixel(x, y, graphics.NewBGPixel(
-					uint(c[0]*255), uint(c[1]*255), uint(c[2]*255), "",
-				))
+				c := s.ssaaBuffer[y*ssaaWidth+x]
+				s.Screen.SetPixel(x, y, graphics.NewBGPixel(uint(c[0]*255), uint(c[1]*255), uint(c[2]*255), ""))
 			} else {
 				var avgR, avgG, avgB float32
-
 				for sy := range s.SSAAFactor {
 					for sx := range s.SSAAFactor {
-						idx := (y*s.SSAAFactor+sy)*ssaaWidth + (x*s.SSAAFactor + sx)
-						c := s.ssaaBuffer[idx]
+						c := s.ssaaBuffer[(y*s.SSAAFactor+sy)*ssaaWidth+(x*s.SSAAFactor+sx)]
 						avgR += c[0]
 						avgG += c[1]
 						avgB += c[2]
 					}
 				}
-
-				avgR *= invSamples
-				avgG *= invSamples
-				avgB *= invSamples
-
-				s.Screen.SetPixel(x, y, graphics.NewBGPixel(
-					uint(avgR*255), uint(avgG*255), uint(avgB*255), "",
-				))
+				s.Screen.SetPixel(x, y, graphics.NewBGPixel(uint(avgR*invSamples*255), uint(avgG*invSamples*255), uint(avgB*invSamples*255), ""))
 			}
 		}
 	}
-
 	s.CurrentFPS = s.fpsCounter.Tick()
-	s.tbos = nil
-	return nil
 }
