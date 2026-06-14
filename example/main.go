@@ -25,10 +25,10 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	// anim, err := textures.ConvertGIFToAnimation("./assets/rickroll.gif")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	anim, err := textures.ConvertGIFToAnimation("./assets/rickroll.gif")
+	if err != nil {
+		panic(err)
+	}
 
 	winMouse, err := mouse.NewWindowMouse()
 	if err != nil {
@@ -80,9 +80,10 @@ func main() {
 	s.SSAAFactor = 1
 
 	var tick int64
-	// var ftick int
+	var ftick int
 	mesh1, _ := assets.LoadOBJ("./assets/suzanne.obj")
 	mesh2, _ := assets.LoadOBJ("./assets/cube.obj")
+	mesh3, _ := assets.LoadOBJ("./assets/plane.obj")
 
 	for s.IsOpen() {
 		winMouse.PollEvents()
@@ -114,6 +115,22 @@ func main() {
 		s.FragShader.SetUniform("tex", tex2)
 
 		s.DrawCall(mesh2)
+
+		// third model --------------------
+		modelMatrix3 := mgl32.Translate3D(.0, -2, .0).Mul4(mgl32.HomogRotate3DY(-angle * 2))
+		mvp3 := camera.VP.Mul4(modelMatrix3)
+
+		s.VertexShader.SetUniform("mvp", &mvp3)
+		s.VertexShader.SetUniform("model", &modelMatrix3)
+
+		frame := &anim.Frames[ftick%len(anim.Frames)]
+		s.FragShader.SetUniform("tex", frame)
+
+		if tick%8 == 0 {
+			ftick++
+		}
+
+		s.DrawCall(mesh3)
 
 		// drawing all meshes --------------------
 		s.Present()
