@@ -1,0 +1,15 @@
+module github.com/striter-no/softgo
+
+go 1.26.3
+
+require (
+	github.com/go-gl/mathgl v1.2.0
+	github.com/striter-no/stg v0.0.0-20260614132026-3a0988ad97bc
+	github.com/ungerik/go3d v0.0.0-20251020194721-1bde1320d420
+)
+
+require (
+	github.com/chewxy/math32 v1.11.1 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/term v0.44.0 // indirect
+)
