@@ -12,7 +12,6 @@ import (
 	"github.com/striter-no/softgo/api/assets"
 	"github.com/striter-no/softgo/api/keyboard"
 	"github.com/striter-no/softgo/api/mouse"
-	textures "github.com/striter-no/softgo/loader"
 
 	"github.com/striter-no/softgo/render"
 	"github.com/striter-no/stg/graphics"
@@ -25,10 +24,10 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	anim, err := textures.ConvertGIFToAnimation("./assets/rickroll.gif")
-	if err != nil {
-		panic(err)
-	}
+	// anim, err := textures.ConvertGIFToAnimation("./assets/rickroll.gif")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	winMouse, err := mouse.NewWindowMouse()
 	if err != nil {
@@ -65,7 +64,7 @@ func main() {
 	defer s.End()
 	s.Init()
 
-	mesh, err := assets.LoadOBJ("./assets/suzanne.obj")
+	mesh, err := assets.LoadOBJ("./assets/plane.obj")
 	if err != nil {
 		panic(err)
 	}
@@ -80,10 +79,10 @@ func main() {
 
 	s.FragShader.SetUniform("tex", tex)
 
-	s.SSAAFactor = 2
+	s.SSAAFactor = 1
 
 	var tick int64
-	var ftick int
+	// var ftick int
 	for s.IsOpen() {
 		winMouse.PollEvents()
 		winKeyboard.PollEvents()
@@ -101,10 +100,10 @@ func main() {
 
 		s.VertexShader.SetUniform("mvp", &finalMVP)
 
-		if tick%7 == 0 {
-			s.FragShader.SetUniform("tex", &anim.Frames[ftick%len(anim.Frames)])
-			ftick++
-		}
+		// if tick%7 == 0 {
+		// 	s.FragShader.SetUniform("tex", &anim.Frames[ftick%len(anim.Frames)])
+		// 	ftick++
+		// }
 
 		for i := range mesh {
 			s.FeedTBO(mesh[i])
@@ -133,7 +132,7 @@ func fragShader(u float32, v float32, col vec4.T, norm vec3.T, s *api.FragmentSh
 		norm[2] /= length
 	}
 
-	lightDir := vec3.T{0.5, 1.0, 0.5}
+	lightDir := vec3.T{0.5, -1.0, 0.5}
 
 	lightLen := float32(math.Sqrt(float64(lightDir[0]*lightDir[0] + lightDir[1]*lightDir[1] + lightDir[2]*lightDir[2])))
 	lightDir[0] /= lightLen

@@ -127,20 +127,19 @@ func (s *RenderScreen) Blit() error {
 		vert1 := s.VertexShader.Perform(&tbo.V1, &tbo.N1, &tbo.C1, &tbo.UV1, s.VertexShader)
 		vert2 := s.VertexShader.Perform(&tbo.V2, &tbo.N2, &tbo.C2, &tbo.UV2, s.VertexShader)
 
-		w0, w1, w2 := vert0.Pos.W(), vert1.Pos.W(), vert2.Pos.W()
-
-		if (vert0.Pos[0] < -w0 && vert1.Pos[0] < -w1 && vert2.Pos[0] < -w2) ||
-			(vert0.Pos[0] > w0 && vert1.Pos[0] > w1 && vert2.Pos[0] > w2) ||
-			(vert0.Pos[1] < -w0 && vert1.Pos[1] < -w1 && vert2.Pos[1] < -w2) ||
-			(vert0.Pos[1] > w0 && vert1.Pos[1] > w1 && vert2.Pos[1] > w2) ||
-			(vert0.Pos[2] < -w0 && vert1.Pos[2] < -w1 && vert2.Pos[2] < -w2) ||
-			(vert0.Pos[2] > w0 && vert1.Pos[2] > w1 && vert2.Pos[2] > w2) {
-			continue
-		}
-
 		clippedTris := render.ClipTriangle(vert0, vert1, vert2, 0.1)
 
 		for _, tri := range clippedTris {
+			w0, w1, w2 := vert0.Pos.W(), vert1.Pos.W(), vert2.Pos.W()
+
+			if (tri[0].Pos[0] < -w0 && tri[1].Pos[0] < -w1 && tri[2].Pos[0] < -w2) ||
+				(tri[0].Pos[0] > w0 && tri[1].Pos[0] > w1 && tri[2].Pos[0] > w2) ||
+				(tri[0].Pos[1] < -w0 && tri[1].Pos[1] < -w1 && tri[2].Pos[1] < -w2) ||
+				(tri[0].Pos[1] > w0 && tri[1].Pos[1] > w1 && tri[2].Pos[1] > w2) ||
+				(tri[0].Pos[2] > w0 && tri[1].Pos[2] > w1 && tri[2].Pos[2] > w2) {
+				continue
+			}
+
 			ndc0 := vec2.T{tri[0].Pos[0] / tri[0].Pos.W(), tri[0].Pos[1] / tri[0].Pos.W()}
 			ndc1 := vec2.T{tri[1].Pos[0] / tri[1].Pos.W(), tri[1].Pos[1] / tri[1].Pos.W()}
 			ndc2 := vec2.T{tri[2].Pos[0] / tri[2].Pos.W(), tri[2].Pos[1] / tri[2].Pos.W()}
@@ -160,6 +159,7 @@ func (s *RenderScreen) Blit() error {
 				tri[0].Color.Vec3(), tri[1].Color.Vec3(), tri[2].Color.Vec3(),
 				tri[0].UV, tri[1].UV, tri[2].UV,
 				tri[0].Normal, tri[1].Normal, tri[2].Normal,
+				ssaaWidth, ssaaHeight,
 				checkDepth,
 				rasterPix,
 			)

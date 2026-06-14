@@ -5,8 +5,8 @@ import (
 	"github.com/ungerik/go3d/vec3"
 )
 
-func edgeFunction(a, b, p vec2.T) float32 {
-	return (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0])
+func edgeFunction(a, b, p vec2.T) float64 {
+	return float64(b[0]-a[0])*float64(p[1]-a[1]) - float64(b[1]-a[1])*float64(p[0]-a[0])
 }
 
 func RasterizeTriangle(
@@ -16,13 +16,15 @@ func RasterizeTriangle(
 	c0, c1, c2 vec3.T,
 	uv0, uv1, uv2 vec2.T,
 	n0, n1, n2 vec3.T,
+	screenWidth, screenHeight int,
 	checkDepth func(x, y int, z float32) bool,
 	drawPixel func(x, y int, z float32, r, g, b uint8, u, v float32, nx, ny, nz float32),
 ) {
-	minX := int(max(0, min(v0[0], v1[0], v2[0])))
-	minY := int(max(0, min(v0[1], v1[1], v2[1])))
-	maxX := int(max(v0[0], v1[0], v2[0]) + 0.5)
-	maxY := int(max(v0[1], v1[1], v2[1]) + 0.5)
+	minX := int(max(0.0, min(v0[0], v1[0], v2[0])))
+	minY := int(max(0.0, min(v0[1], v1[1], v2[1])))
+
+	maxX := int(min(float32(screenWidth-1), max(v0[0], v1[0], v2[0])+0.5))
+	maxY := int(min(float32(screenHeight-1), max(v0[1], v1[1], v2[1])+0.5))
 
 	area := edgeFunction(v0, v1, v2)
 
@@ -35,14 +37,14 @@ func RasterizeTriangle(
 	invW1 := 1.0 / w1
 	invW2 := 1.0 / w2
 
-	stepX0 := -(v2[1] - v1[1])
-	stepY0 := (v2[0] - v1[0])
+	stepX0 := float64(-(v2[1] - v1[1]))
+	stepY0 := float64(v2[0] - v1[0])
 
-	stepX1 := -(v0[1] - v2[1])
-	stepY1 := (v0[0] - v2[0])
+	stepX1 := float64(-(v0[1] - v2[1]))
+	stepY1 := float64(v0[0] - v2[0])
 
-	stepX2 := -(v1[1] - v0[1])
-	stepY2 := (v1[0] - v0[0])
+	stepX2 := float64(-(v1[1] - v0[1]))
+	stepY2 := float64(v1[0] - v0[0])
 
 	pStart := vec2.T{float32(minX) + 0.5, float32(minY) + 0.5}
 	rowBc0 := edgeFunction(v1, v2, pStart)
@@ -56,9 +58,9 @@ func RasterizeTriangle(
 
 		for x := minX; x <= maxX; x++ {
 			if bc0 <= 0 && bc1 <= 0 && bc2 <= 0 {
-				normBc0 := bc0 * invArea
-				normBc1 := bc1 * invArea
-				normBc2 := bc2 * invArea
+				normBc0 := float32(bc0 * invArea)
+				normBc1 := float32(bc1 * invArea)
+				normBc2 := float32(bc2 * invArea)
 
 				interpZ := z0*normBc0 + z1*normBc1 + z2*normBc2
 

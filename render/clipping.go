@@ -41,43 +41,57 @@ func lerp(a, b VertexOut, t float32) VertexOut {
 }
 
 func ClipTriangle(v0, v1, v2 VertexOut, W_NEAR float32) [][3]VertexOut {
-	var inside []VertexOut
-	var outside []VertexOut
+	// Считаем "расстояние" каждой вершины до плоскости отсечения (Near Plane)
+	d0 := v0.Pos.W() - W_NEAR
+	d1 := v1.Pos.W() - W_NEAR
+	d2 := v2.Pos.W() - W_NEAR
 
-	for _, v := range []VertexOut{v0, v1, v2} {
-		if v.Pos.W() >= W_NEAR {
-			inside = append(inside, v)
-		} else {
-			outside = append(outside, v)
-		}
+	// Считаем, сколько вершин находится ПЕРЕД камерой (видимы)
+	inCount := 0
+	if d0 >= 0 {
+		inCount++
+	}
+	if d1 >= 0 {
+		inCount++
+	}
+	if d2 >= 0 {
+		inCount++
 	}
 
-	switch len(inside) {
+	switch inCount {
 	case 0:
+		// Все вершины позади камеры
 		return nil
 
 	case 3:
-		return [][3]VertexOut{{inside[0], inside[1], inside[2]}}
+		// Все вершины перед камерой — возвращаем как есть
+		return [][3]VertexOut{{v0, v1, v2}}
 
 	case 1:
-		t0 := (W_NEAR - inside[0].Pos.W()) / (outside[0].Pos.W() - inside[0].Pos.W())
-		t1 := (W_NEAR - inside[0].Pos.W()) / (outside[1].Pos.W() - inside[0].Pos.W())
-
-		newV1 := lerp(inside[0], outside[0], t0)
-		newV2 := lerp(inside[0], outside[1], t1)
-
-		return [][3]VertexOut{{inside[0], newV1, newV2}}
+		// 1 вершина внутри, 2 снаружи (получается 1 маленький треугольник)
+		if d0 >= 0 {
+			return [][3]VertexOut{{v0, lerp(v0, v1, d0/(d0-d1)), lerp(v0, v2, d0/(d0-d2))}}
+		} else if d1 >= 0 {
+			return [][3]VertexOut{{v1, lerp(v1, v2, d1/(d1-d2)), lerp(v1, v0, d1/(d1-d0))}}
+		} else {
+			return [][3]VertexOut{{v2, lerp(v2, v0, d2/(d2-d0)), lerp(v2, v1, d2/(d2-d1))}}
+		}
 
 	case 2:
-		t0 := (W_NEAR - inside[0].Pos.W()) / (outside[0].Pos.W() - inside[0].Pos.W())
-		t1 := (W_NEAR - inside[1].Pos.W()) / (outside[0].Pos.W() - inside[1].Pos.W())
-
-		newV0 := lerp(inside[0], outside[0], t0)
-		newV1 := lerp(inside[1], outside[0], t1)
-
-		return [][3]VertexOut{
-			{inside[0], inside[1], newV0},
-			{inside[1], newV1, newV0},
+		// 2 вершины внутри, 1 снаружи (получается четырехугольник, разбиваем на 2 треугольника)
+		// Важно: строго сохраняем круговой порядок CCW!
+		if d0 < 0 { // v0 снаружи (внутри v1 и v2)
+			n1 := lerp(v1, v0, d1/(d1-d0))
+			n2 := lerp(v2, v0, d2/(d2-d0))
+			return [][3]VertexOut{{v1, v2, n1}, {v2, n2, n1}}
+		} else if d1 < 0 { // v1 снаружи (внутри v2 и v0)
+			n1 := lerp(v2, v1, d2/(d2-d1))
+			n2 := lerp(v0, v1, d0/(d0-d1))
+			return [][3]VertexOut{{v2, v0, n1}, {v0, n2, n1}}
+		} else { // v2 снаружи (внутри v0 и v1)
+			n1 := lerp(v0, v2, d0/(d0-d2))
+			n2 := lerp(v1, v2, d1/(d1-d2))
+			return [][3]VertexOut{{v0, v1, n1}, {v1, n2, n1}}
 		}
 	}
 
