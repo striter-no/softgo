@@ -49,9 +49,11 @@ func NewRenderScreen(ctx context.Context) (*RenderScreen, error) {
 func (s *RenderScreen) Init() {
 	s.Screen.EnterAlt()
 	s.Screen.HideCursor()
+	// s.Screen.DisableEcho()
 }
 
 func (s *RenderScreen) End() {
+	// s.Screen.EnableEcho()
 	s.Screen.ShowCursor()
 	s.Screen.ExitAlt()
 }
@@ -100,7 +102,7 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 		return z < s.zBuffer[idx]
 	}
 
-	rasterPix := func(x, y int, z float32, r, g, b uint8, u, v float32, nx, ny, nz float32) {
+	rasterPix := func(x, y int, z float32, r, g, b uint8, u, v float32, nx, ny, nz float32, fpx, fpy, fpz float32) {
 		if x < 0 || x >= ssaaWidth || y < 0 || y >= ssaaHeight {
 			return
 		}
@@ -114,6 +116,7 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 			u, v,
 			vec4.T{float32(r) / 255.0, float32(g) / 255.0, float32(b) / 255.0, 1.0},
 			vec3.T{nx, ny, nz},
+			vec3.T{fpx, fpy, fpz},
 			s.FragShader,
 		)
 
@@ -158,6 +161,7 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 				tri[0].Color.Vec3(), tri[1].Color.Vec3(), tri[2].Color.Vec3(),
 				tri[0].UV, tri[1].UV, tri[2].UV,
 				tri[0].Normal, tri[1].Normal, tri[2].Normal,
+				tri[0].FragPos, tri[1].FragPos, tri[2].FragPos,
 				ssaaWidth, ssaaHeight,
 				checkDepth,
 				rasterPix,

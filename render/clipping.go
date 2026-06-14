@@ -8,10 +8,11 @@ import (
 )
 
 type VertexOut struct {
-	Pos    mgl32.Vec4
-	Color  vec4.T
-	UV     vec2.T
-	Normal vec3.T
+	Pos     mgl32.Vec4
+	Color   vec4.T
+	UV      vec2.T
+	Normal  vec3.T
+	FragPos vec3.T
 }
 
 func lerp(a, b VertexOut, t float32) VertexOut {
@@ -36,6 +37,11 @@ func lerp(a, b VertexOut, t float32) VertexOut {
 			a.Normal[0] + (b.Normal[0]-a.Normal[0])*t,
 			a.Normal[1] + (b.Normal[1]-a.Normal[1])*t,
 			a.Normal[2] + (b.Normal[2]-a.Normal[2])*t,
+		},
+		FragPos: vec3.T{
+			a.FragPos[0] + (b.FragPos[0]-a.FragPos[0])*t,
+			a.FragPos[1] + (b.FragPos[1]-a.FragPos[1])*t,
+			a.FragPos[2] + (b.FragPos[2]-a.FragPos[2])*t,
 		},
 	}
 }

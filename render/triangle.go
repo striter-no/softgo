@@ -16,9 +16,10 @@ func RasterizeTriangle(
 	c0, c1, c2 vec3.T,
 	uv0, uv1, uv2 vec2.T,
 	n0, n1, n2 vec3.T,
+	fp0, fp1, fp2 vec3.T,
 	screenWidth, screenHeight int,
 	checkDepth func(x, y int, z float32) bool,
-	drawPixel func(x, y int, z float32, r, g, b uint8, u, v float32, nx, ny, nz float32),
+	drawPixel func(x, y int, z float32, r, g, b uint8, u, v float32, nx, ny, nz float32, fpx, fpy, fpz float32),
 ) {
 	minX := int(max(0.0, min(v0[0], v1[0], v2[0])))
 	minY := int(max(0.0, min(v0[1], v1[1], v2[1])))
@@ -76,6 +77,10 @@ func RasterizeTriangle(
 					interpNy := (n0[1]*invW0*normBc0 + n1[1]*invW1*normBc1 + n2[1]*invW2*normBc2) * invZFunc
 					interpNz := (n0[2]*invW0*normBc0 + n1[2]*invW1*normBc1 + n2[2]*invW2*normBc2) * invZFunc
 
+					interpFpX := float32(float32(fp0[0])*invW0*normBc0+float32(fp1[0])*invW1*normBc1+float32(fp2[0])*invW2*normBc2) * invZFunc
+					interpFpY := float32(float32(fp0[1])*invW0*normBc0+float32(fp1[1])*invW1*normBc1+float32(fp2[1])*invW2*normBc2) * invZFunc
+					interpFpZ := float32(float32(fp0[2])*invW0*normBc0+float32(fp1[2])*invW1*normBc1+float32(fp2[2])*invW2*normBc2) * invZFunc
+
 					r := c0[0]*normBc0 + c1[0]*normBc1 + c2[0]*normBc2
 					g := c0[1]*normBc0 + c1[1]*normBc1 + c2[1]*normBc2
 					b := c0[2]*normBc0 + c1[2]*normBc1 + c2[2]*normBc2
@@ -84,7 +89,7 @@ func RasterizeTriangle(
 					g = min(255, max(0, g))
 					b = min(255, max(0, b))
 
-					drawPixel(x, y, interpZ, uint8(r), uint8(g), uint8(b), interpU, interpV, interpNx, interpNy, interpNz)
+					drawPixel(x, y, interpZ, uint8(r), uint8(g), uint8(b), interpU, interpV, interpNx, interpNy, interpNz, interpFpX, interpFpY, interpFpZ)
 				}
 			}
 

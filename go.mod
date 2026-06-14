@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/go-gl/mathgl v1.2.0
-	github.com/striter-no/stg v0.0.0-20260614132026-3a0988ad97bc
+	github.com/striter-no/stg v0.0.0-20260614221801-579572073cfa
 	github.com/ungerik/go3d v0.0.0-20251020194721-1bde1320d420
 )
 
