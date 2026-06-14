@@ -1,12 +1,15 @@
 package render
 
 import (
+	"github.com/ungerik/go3d/vec2"
 	"github.com/ungerik/go3d/vec3"
 	"github.com/ungerik/go3d/vec4"
 )
 
 // Triangle Buffer Object
 type TBO struct {
-	V0, V1, V2 vec3.T
-	C0, C1, C2 vec4.T
+	V0, V1, V2    vec3.T
+	C0, C1, C2    vec4.T
+	UV0, UV1, UV2 vec2.T
+	N0, N1, N2    vec3.T
 }

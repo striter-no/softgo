@@ -3,16 +3,18 @@ package api
 import (
 	"errors"
 
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/striter-no/softgo/render"
+	"github.com/ungerik/go3d/vec2"
 	"github.com/ungerik/go3d/vec3"
+	"github.com/ungerik/go3d/vec4"
 )
 
 type VertexShader struct {
 	Params  map[string]any
-	Perform func(tbo *vec3.T, shader *VertexShader) mgl32.Vec4
+	Perform func(pos *vec3.T, norm *vec3.T, color *vec4.T, uv *vec2.T, shader *VertexShader) render.VertexOut
 }
 
-func NewVertexShader(pxFunc func(tbo *vec3.T, shader *VertexShader) mgl32.Vec4) *VertexShader {
+func NewVertexShader(pxFunc func(pos *vec3.T, norm *vec3.T, color *vec4.T, uv *vec2.T, shader *VertexShader) render.VertexOut) *VertexShader {
 	return &VertexShader{
 		Params:  make(map[string]any, 0),
 		Perform: pxFunc,

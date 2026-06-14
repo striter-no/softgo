@@ -2,12 +2,16 @@ package render
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/ungerik/go3d/vec2"
+	"github.com/ungerik/go3d/vec3"
 	"github.com/ungerik/go3d/vec4"
 )
 
 type VertexOut struct {
-	Pos   mgl32.Vec4
-	Color vec4.T
+	Pos    mgl32.Vec4
+	Color  vec4.T
+	UV     vec2.T
+	Normal vec3.T
 }
 
 func lerp(a, b VertexOut, t float32) VertexOut {
@@ -23,6 +27,15 @@ func lerp(a, b VertexOut, t float32) VertexOut {
 			a.Color[1] + (b.Color[1]-a.Color[1])*t,
 			a.Color[2] + (b.Color[2]-a.Color[2])*t,
 			a.Color[3] + (b.Color[3]-a.Color[3])*t,
+		},
+		UV: vec2.T{
+			a.UV[0] + (b.UV[0]-a.UV[0])*t,
+			a.UV[1] + (b.UV[1]-a.UV[1])*t,
+		},
+		Normal: vec3.T{
+			a.Normal[0] + (b.Normal[0]-a.Normal[0])*t,
+			a.Normal[1] + (b.Normal[1]-a.Normal[1])*t,
+			a.Normal[2] + (b.Normal[2]-a.Normal[2])*t,
 		},
 	}
 }
