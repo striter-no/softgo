@@ -51,15 +51,16 @@ func NewRenderScreen(ctx context.Context) (*RenderScreen, error) {
 }
 
 func (s *RenderScreen) Init() {
+	s.Screen.DisableEcho()
 	s.Screen.EnterAlt()
 	s.Screen.HideCursor()
-	s.Screen.DisableEcho()
 }
 
 func (s *RenderScreen) End() {
-	s.Screen.EnableEcho()
 	s.Screen.ShowCursor()
 	s.Screen.ExitAlt()
+	s.Screen.EnableEcho()
+	s.Screen.FlushInput()
 }
 
 func (s *RenderScreen) IsOpen() bool {
