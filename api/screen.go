@@ -144,7 +144,9 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 
 		for i := range count {
 			tri := clippedTris[i]
-			w0, w1, w2 := vert0.Pos.W(), vert1.Pos.W(), vert2.Pos.W()
+			w0 := tri[0].Pos.W()
+			w1 := tri[1].Pos.W()
+			w2 := tri[2].Pos.W()
 
 			if (tri[0].Pos[0] < -w0 && tri[1].Pos[0] < -w1 && tri[2].Pos[0] < -w2) ||
 				(tri[0].Pos[0] > w0 && tri[1].Pos[0] > w1 && tri[2].Pos[0] > w2) ||
