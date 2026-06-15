@@ -27,6 +27,8 @@ type RenderScreen struct {
 
 	zBuffer    []float32
 	CurrentFPS float64
+
+	BackColor vec3.T
 }
 
 func NewRenderScreen(ctx context.Context) (*RenderScreen, error) {
@@ -41,6 +43,7 @@ func NewRenderScreen(ctx context.Context) (*RenderScreen, error) {
 		FragShader:   nil,
 		VertexShader: nil,
 		fpsCounter:   NewFPSCounter(time.Second),
+		BackColor:    vec3.T{0.2, 0.2, 0.2},
 	}
 
 	return out, nil
@@ -82,7 +85,7 @@ func (s *RenderScreen) Clear() error {
 	}
 
 	for i := range s.ssaaBuffer {
-		s.ssaaBuffer[i] = vec3.T{0.1, 0.1, 0.1}
+		s.ssaaBuffer[i] = s.BackColor
 		s.zBuffer[i] = math.MaxFloat32
 	}
 	return nil
