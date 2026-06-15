@@ -28,7 +28,8 @@ type RenderScreen struct {
 	zBuffer    []float32
 	CurrentFPS float64
 
-	BackColor vec3.T
+	BackColor           vec3.T
+	isResolutionChanged bool
 }
 
 func NewRenderScreen(ctx context.Context) (*RenderScreen, error) {
@@ -65,6 +66,13 @@ func (s *RenderScreen) IsOpen() bool {
 	return s.Screen.IsRunning()
 }
 
+func (s *RenderScreen) ChangedRes() bool {
+	v := s.isResolutionChanged
+	s.isResolutionChanged = false
+
+	return v
+}
+
 func (s *RenderScreen) Clear() error {
 	if err := s.Screen.ClearPixels(); err != nil {
 		return err
@@ -91,35 +99,26 @@ func (s *RenderScreen) Clear() error {
 	return nil
 }
 
-func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
+func (s *RenderScreen) DrawCall(mesh []render.TBO, target *render.Framebuffer) error {
 	if s.FragShader == nil || s.VertexShader == nil {
 		return errors.New("No fragment or vertex shader set")
 	}
 
-	if s.SSAAFactor < 1 {
-		s.SSAAFactor = 1
-	}
-
-	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
-
-	ssaaWidth := int(fw) * s.SSAAFactor
-	ssaaHeight := int(fh) * s.SSAAFactor
-
 	checkDepth := func(x, y int, z float32) bool {
-		if x < 0 || x >= ssaaWidth || y < 0 || y >= ssaaHeight {
+		if x < 0 || x >= target.Width || y < 0 || y >= target.Height {
 			return false
 		}
-		idx := y*ssaaWidth + x
-		return z < s.zBuffer[idx]
+		idx := y*target.Width + x
+		return z < target.DepthBuffer[idx]
 	}
 
 	rasterPix := func(x, y int, z float32, r, g, b uint8, u, v float32, nx, ny, nz float32, fpx, fpy, fpz float32) {
-		if x < 0 || x >= ssaaWidth || y < 0 || y >= ssaaHeight {
+		if x < 0 || x >= target.Width || y < 0 || y >= target.Height {
 			return
 		}
 
-		idx := y*ssaaWidth + x
-		if z >= s.zBuffer[idx] {
+		idx := y*target.Width + x
+		if z >= target.DepthBuffer[idx] {
 			return
 		}
 
@@ -136,15 +135,19 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 			return
 		}
 
-		if alpha < 1.0 {
-			oldColor := s.ssaaBuffer[idx]
-			frag[0] = frag[0]*alpha + oldColor[0]*(1.0-alpha)
-			frag[1] = frag[1]*alpha + oldColor[1]*(1.0-alpha)
-			frag[2] = frag[2]*alpha + oldColor[2]*(1.0-alpha)
-		} else {
-			s.zBuffer[idx] = z
+		if target.HasColor {
+			if alpha < 1.0 {
+				oldColor := target.ColorBuffer[idx]
+				frag[0] = frag[0]*alpha + oldColor[0]*(1.0-alpha)
+				frag[1] = frag[1]*alpha + oldColor[1]*(1.0-alpha)
+				frag[2] = frag[2]*alpha + oldColor[2]*(1.0-alpha)
+			}
+			target.ColorBuffer[idx] = vec3.T{frag[0], frag[1], frag[2]}
 		}
-		s.ssaaBuffer[y*ssaaWidth+x] = vec3.T{frag[0], frag[1], frag[2]}
+
+		if alpha >= 1.0 || !target.HasColor {
+			target.DepthBuffer[idx] = z
+		}
 	}
 
 	for _, tbo := range mesh {
@@ -176,9 +179,9 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 			ndcZ1 := tri[1].Pos[2] / tri[1].Pos.W()
 			ndcZ2 := tri[2].Pos[2] / tri[2].Pos.W()
 
-			screenV0 := vec2.T{(ndc0[0] + 1.0) * 0.5 * float32(ssaaWidth), (1.0 - ndc0[1]) * 0.5 * float32(ssaaHeight)}
-			screenV1 := vec2.T{(ndc1[0] + 1.0) * 0.5 * float32(ssaaWidth), (1.0 - ndc1[1]) * 0.5 * float32(ssaaHeight)}
-			screenV2 := vec2.T{(ndc2[0] + 1.0) * 0.5 * float32(ssaaWidth), (1.0 - ndc2[1]) * 0.5 * float32(ssaaHeight)}
+			screenV0 := vec2.T{(ndc0[0] + 1.0) * 0.5 * float32(target.Width), (1.0 - ndc0[1]) * 0.5 * float32(target.Height)}
+			screenV1 := vec2.T{(ndc1[0] + 1.0) * 0.5 * float32(target.Width), (1.0 - ndc1[1]) * 0.5 * float32(target.Height)}
+			screenV2 := vec2.T{(ndc2[0] + 1.0) * 0.5 * float32(target.Width), (1.0 - ndc2[1]) * 0.5 * float32(target.Height)}
 
 			render.RasterizeTriangle(
 				tbo.OmniDir,
@@ -189,7 +192,7 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 				tri[0].UV, tri[1].UV, tri[2].UV,
 				tri[0].Normal, tri[1].Normal, tri[2].Normal,
 				tri[0].FragPos, tri[1].FragPos, tri[2].FragPos,
-				ssaaWidth, ssaaHeight,
+				target.Width, target.Height,
 				checkDepth,
 				rasterPix,
 			)
@@ -199,26 +202,20 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 	return nil
 }
 
-func (s *RenderScreen) Present() {
-
-	if s.SSAAFactor < 1 {
-		s.SSAAFactor = 1
-	}
-
+func (s *RenderScreen) Present(mainFBO *render.Framebuffer) {
 	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
-	ssaaWidth := int(fw) * s.SSAAFactor
 	invSamples := 1.0 / float32(s.SSAAFactor*s.SSAAFactor)
 
 	for y := 0; y < int(fh); y++ {
 		for x := 0; x < int(fw); x++ {
 			if s.SSAAFactor == 1 {
-				c := s.ssaaBuffer[y*ssaaWidth+x]
+				c := mainFBO.ColorBuffer[y*mainFBO.Width+x]
 				s.Screen.SetPixel(x, y, graphics.NewBGPixel(uint(c[0]*255), uint(c[1]*255), uint(c[2]*255), ""))
 			} else {
 				var avgR, avgG, avgB float32
-				for sy := range s.SSAAFactor {
-					for sx := range s.SSAAFactor {
-						c := s.ssaaBuffer[(y*s.SSAAFactor+sy)*ssaaWidth+(x*s.SSAAFactor+sx)]
+				for sy := 0; sy < s.SSAAFactor; sy++ {
+					for sx := 0; sx < s.SSAAFactor; sx++ {
+						c := mainFBO.ColorBuffer[(y*s.SSAAFactor+sy)*mainFBO.Width+(x*s.SSAAFactor+sx)]
 						avgR += c[0]
 						avgG += c[1]
 						avgB += c[2]
@@ -228,5 +225,6 @@ func (s *RenderScreen) Present() {
 			}
 		}
 	}
+
 	s.CurrentFPS = s.fpsCounter.Tick()
 }

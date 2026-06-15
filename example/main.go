@@ -25,7 +25,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	anim, err := textures.ConvertGIFToAnimation("./assets/rickroll.gif")
+	anim, err := textures.ConvertGIFToAnimation("./assets/textures/rickroll.gif")
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,7 @@ func main() {
 		Pixels: generateCheckerboard(312, 312),
 	}
 
-	tex2 := textures.ConvertImageToTexture("./assets/onigiri.jpg")
+	tex2 := textures.ConvertImageToTexture("./assets/textures/onigiri.jpg")
 
 	s.FragShader = api.NewFragShader(fragShader)
 	s.VertexShader = api.NewVertexShader(vertShader)
@@ -81,10 +81,12 @@ func main() {
 
 	var tick int64
 	var ftick int
-	mesh1, _ := assets.LoadOBJ("./assets/suzanne.obj")
-	mesh2, _ := assets.LoadOBJ("./assets/cube.obj")
-	mesh3, _ := assets.LoadOBJ("./assets/plane.obj")
+	mesh1, _ := assets.LoadOBJ("./assets/meshes/suzanne.obj")
+	mesh2, _ := assets.LoadOBJ("./assets/meshes/cube.obj")
+	mesh3, _ := assets.LoadOBJ("./assets/meshes/plane.obj")
 
+	mainFBO := render.NewFramebuffer(s.Screen.Width*s.SSAAFactor, s.Screen.Height*s.SSAAFactor, false)
+	oldW, oldH := s.Screen.Width, s.Screen.Height
 	for s.IsOpen() {
 		winMouse.PollEvents()
 		winKeyboard.PollEvents()
@@ -93,6 +95,11 @@ func main() {
 		camera.UpdateOnHID(aspect)
 
 		s.Clear()
+		if oldW != s.Screen.Width || oldH != s.Screen.Height {
+			mainFBO = render.NewFramebuffer(s.Screen.Width*s.SSAAFactor, s.Screen.Height*s.SSAAFactor, false)
+		}
+
+		mainFBO.Clear(s.BackColor)
 
 		camPos := camera.Position
 		s.FragShader.SetUniform("viewPos", &camPos)
@@ -107,7 +114,7 @@ func main() {
 		s.VertexShader.SetUniform("model", &modelMatrix1)
 		s.FragShader.SetUniform("tex", tex)
 
-		s.DrawCall(mesh1)
+		s.DrawCall(mesh1, mainFBO)
 
 		// second model --------------------
 		modelMatrix2 := mgl32.Translate3D(2.0, 0, 0).Mul4(mgl32.HomogRotate3DY(-angle * 2))
@@ -117,7 +124,7 @@ func main() {
 		s.VertexShader.SetUniform("model", &modelMatrix2)
 		s.FragShader.SetUniform("tex", tex2)
 
-		s.DrawCall(mesh2)
+		s.DrawCall(mesh2, mainFBO)
 
 		// third model --------------------
 		modelMatrix3 := mgl32.Translate3D(.0, -2, .0).Mul4(mgl32.HomogRotate3DY(angle * 0.5)).Mul4(mgl32.Scale3D(5, 1, 5))
@@ -133,12 +140,14 @@ func main() {
 			ftick++
 		}
 
-		s.DrawCall(mesh3)
+		s.DrawCall(mesh3, mainFBO)
 
 		// drawing all meshes --------------------
-		s.Present()
+		s.Present(mainFBO)
 
 		s.Screen.SetText(0, 0, fmt.Sprintf("FPS: %.1f", s.CurrentFPS), graphics.NewFGPixel(255, 255, 255, ""))
+
+		oldW, oldH = s.Screen.Width, s.Screen.Height
 		s.Screen.Blit() // drawing to the terminal
 
 		tick++
