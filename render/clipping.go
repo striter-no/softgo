@@ -46,13 +46,13 @@ func lerp(a, b VertexOut, t float32) VertexOut {
 	}
 }
 
-func ClipTriangle(v0, v1, v2 VertexOut, W_NEAR float32) [][3]VertexOut {
-	// Считаем "расстояние" каждой вершины до плоскости отсечения (Near Plane)
+func ClipTriangle(v0, v1, v2 VertexOut, W_NEAR float32) ([2][3]VertexOut, int) {
+	var out [2][3]VertexOut
+
 	d0 := v0.Pos.W() - W_NEAR
 	d1 := v1.Pos.W() - W_NEAR
 	d2 := v2.Pos.W() - W_NEAR
 
-	// Считаем, сколько вершин находится ПЕРЕД камерой (видимы)
 	inCount := 0
 	if d0 >= 0 {
 		inCount++
@@ -66,40 +66,37 @@ func ClipTriangle(v0, v1, v2 VertexOut, W_NEAR float32) [][3]VertexOut {
 
 	switch inCount {
 	case 0:
-		// Все вершины позади камеры
-		return nil
-
+		return out, 0
 	case 3:
-		// Все вершины перед камерой — возвращаем как есть
-		return [][3]VertexOut{{v0, v1, v2}}
-
+		out[0] = [3]VertexOut{v0, v1, v2}
+		return out, 1
 	case 1:
-		// 1 вершина внутри, 2 снаружи (получается 1 маленький треугольник)
 		if d0 >= 0 {
-			return [][3]VertexOut{{v0, lerp(v0, v1, d0/(d0-d1)), lerp(v0, v2, d0/(d0-d2))}}
+			out[0] = [3]VertexOut{v0, lerp(v0, v1, d0/(d0-d1)), lerp(v0, v2, d0/(d0-d2))}
 		} else if d1 >= 0 {
-			return [][3]VertexOut{{v1, lerp(v1, v2, d1/(d1-d2)), lerp(v1, v0, d1/(d1-d0))}}
+			out[0] = [3]VertexOut{v1, lerp(v1, v2, d1/(d1-d2)), lerp(v1, v0, d1/(d1-d0))}
 		} else {
-			return [][3]VertexOut{{v2, lerp(v2, v0, d2/(d2-d0)), lerp(v2, v1, d2/(d2-d1))}}
+			out[0] = [3]VertexOut{v2, lerp(v2, v0, d2/(d2-d0)), lerp(v2, v1, d2/(d2-d1))}
 		}
-
+		return out, 1
 	case 2:
-		// 2 вершины внутри, 1 снаружи (получается четырехугольник, разбиваем на 2 треугольника)
-		// Важно: строго сохраняем круговой порядок CCW!
-		if d0 < 0 { // v0 снаружи (внутри v1 и v2)
+		if d0 < 0 {
 			n1 := lerp(v1, v0, d1/(d1-d0))
 			n2 := lerp(v2, v0, d2/(d2-d0))
-			return [][3]VertexOut{{v1, v2, n1}, {v2, n2, n1}}
-		} else if d1 < 0 { // v1 снаружи (внутри v2 и v0)
+			out[0] = [3]VertexOut{v1, v2, n1}
+			out[1] = [3]VertexOut{v2, n2, n1}
+		} else if d1 < 0 {
 			n1 := lerp(v2, v1, d2/(d2-d1))
 			n2 := lerp(v0, v1, d0/(d0-d1))
-			return [][3]VertexOut{{v2, v0, n1}, {v0, n2, n1}}
-		} else { // v2 снаружи (внутри v0 и v1)
+			out[0] = [3]VertexOut{v2, v0, n1}
+			out[1] = [3]VertexOut{v0, n2, n1}
+		} else {
 			n1 := lerp(v0, v2, d0/(d0-d2))
 			n2 := lerp(v1, v2, d1/(d1-d2))
-			return [][3]VertexOut{{v0, v1, n1}, {v1, n2, n1}}
+			out[0] = [3]VertexOut{v0, v1, n1}
+			out[1] = [3]VertexOut{v1, n2, n1}
 		}
+		return out, 2
 	}
-
-	return nil
+	return out, 0
 }

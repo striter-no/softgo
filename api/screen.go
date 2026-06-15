@@ -129,9 +129,10 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 		vert1 := s.VertexShader.Perform(&tbo.V1, &tbo.N1, &tbo.C1, &tbo.UV1, s.VertexShader)
 		vert2 := s.VertexShader.Perform(&tbo.V2, &tbo.N2, &tbo.C2, &tbo.UV2, s.VertexShader)
 
-		clippedTris := render.ClipTriangle(vert0, vert1, vert2, 0.1)
+		clippedTris, count := render.ClipTriangle(vert0, vert1, vert2, 0.1)
 
-		for _, tri := range clippedTris {
+		for i := range count {
+			tri := clippedTris[i]
 			w0, w1, w2 := vert0.Pos.W(), vert1.Pos.W(), vert2.Pos.W()
 
 			if (tri[0].Pos[0] < -w0 && tri[1].Pos[0] < -w1 && tri[2].Pos[0] < -w2) ||
