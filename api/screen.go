@@ -60,7 +60,6 @@ func (s *RenderScreen) End() {
 	s.Screen.ShowCursor()
 	s.Screen.ExitAlt()
 	s.Screen.EnableEcho()
-	s.Screen.FlushInput()
 }
 
 func (s *RenderScreen) IsOpen() bool {
