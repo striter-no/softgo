@@ -181,6 +181,7 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 			screenV2 := vec2.T{(ndc2[0] + 1.0) * 0.5 * float32(ssaaWidth), (1.0 - ndc2[1]) * 0.5 * float32(ssaaHeight)}
 
 			render.RasterizeTriangle(
+				tbo.OmniDir,
 				screenV0, screenV1, screenV2,
 				ndcZ0, ndcZ1, ndcZ2,
 				tri[0].Pos.W(), tri[1].Pos.W(), tri[2].Pos.W(),

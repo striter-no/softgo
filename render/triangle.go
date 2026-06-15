@@ -10,6 +10,7 @@ func edgeFunction(a, b, p vec2.T) float64 {
 }
 
 func RasterizeTriangle(
+	omniDir bool,
 	v0, v1, v2 vec2.T,
 	z0, z1, z2 float32,
 	w0, w1, w2 float32,
@@ -29,7 +30,7 @@ func RasterizeTriangle(
 
 	area := edgeFunction(v0, v1, v2)
 
-	if area >= 0 {
+	if !omniDir && area >= 0 {
 		return
 	}
 

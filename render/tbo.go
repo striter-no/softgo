@@ -12,4 +12,5 @@ type TBO struct {
 	C0, C1, C2    vec4.T
 	UV0, UV1, UV2 vec2.T
 	N0, N1, N2    vec3.T
+	OmniDir       bool
 }

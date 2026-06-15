@@ -97,6 +97,8 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 					C0: vec4.T{255, 255, 255, 1},
 					C1: vec4.T{255, 255, 255, 1},
 					C2: vec4.T{255, 255, 255, 1},
+
+					OmniDir: false,
 				}
 				triangles = append(triangles, tri)
 			}
