@@ -6,7 +6,7 @@ import (
 )
 
 func edgeFunction(a, b, p vec2.T) float64 {
-	return float64(b[0]-a[0])*float64(p[1]-a[1]) - float64(b[1]-a[1])*float64(p[0]-a[0])
+	return (float64(b[0])-float64(a[0]))*(float64(p[1])-float64(a[1])) - (float64(b[1])-float64(a[1]))*(float64(p[0])-float64(a[0]))
 }
 
 func RasterizeTriangle(

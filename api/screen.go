@@ -117,6 +117,10 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO, target *render.Framebuffer) e
 			return
 		}
 
+		if z > 1.0 || z < -1.0 {
+			return
+		}
+
 		idx := y*target.Width + x
 		if z >= target.DepthBuffer[idx] {
 			return
