@@ -131,7 +131,19 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 			s.FragShader,
 		)
 
-		s.zBuffer[idx] = z
+		alpha := frag[3]
+		if alpha < 0.01 {
+			return
+		}
+
+		if alpha < 1.0 {
+			oldColor := s.ssaaBuffer[idx]
+			frag[0] = frag[0]*alpha + oldColor[0]*(1.0-alpha)
+			frag[1] = frag[1]*alpha + oldColor[1]*(1.0-alpha)
+			frag[2] = frag[2]*alpha + oldColor[2]*(1.0-alpha)
+		} else {
+			s.zBuffer[idx] = z
+		}
 		s.ssaaBuffer[y*ssaaWidth+x] = vec3.T{frag[0], frag[1], frag[2]}
 	}
 
