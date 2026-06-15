@@ -19,11 +19,15 @@ type Camera struct {
 	Sensivity float32
 	Speed     float32
 
+	Near float32
+	Far  float32
+	FOV  float32
+
 	mouse    mouse.WindowMouse
 	keyboard keyboard.WindowKeyboard
 }
 
-func NewCamera(position vec3.T, sensivity float32, speed float32, mouse mouse.WindowMouse, keyboard keyboard.WindowKeyboard) *Camera {
+func NewCamera(position vec3.T, sensivity float32, speed float32, mouse mouse.WindowMouse, keyboard keyboard.WindowKeyboard, near, far, fov float32) *Camera {
 	return &Camera{
 		Position:  position,
 		Rotation:  vec3.T{0, 0, 0},
@@ -32,6 +36,9 @@ func NewCamera(position vec3.T, sensivity float32, speed float32, mouse mouse.Wi
 		mouse:     mouse,
 		keyboard:  keyboard,
 		Locked:    false,
+		Near:      near,
+		Far:       far,
+		FOV:       fov,
 	}
 }
 
@@ -97,7 +104,7 @@ func (c *Camera) UpdateOnHID(aspect float32) {
 		c.Position[1] -= c.Speed
 	}
 
-	proj := mgl32.Perspective(mgl32.DegToRad(60), aspect, 0.1, 100.0)
+	proj := mgl32.Perspective(mgl32.DegToRad(c.FOV), aspect, c.Near, c.Far)
 
 	mglPos := mgl32.Vec3{c.Position[0], c.Position[1], c.Position[2]}
 	target := mglPos.Add(forward)
