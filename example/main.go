@@ -53,6 +53,7 @@ func main() {
 		.08,
 		.1,
 		winMouse, winKeyboard,
+		0.1, 100, 90,
 	)
 
 	camera.Locked = true
@@ -154,7 +155,7 @@ func main() {
 	}
 }
 
-func fragShader(u float32, v float32, col vec4.T, norm vec3.T, fragPos vec3.T, s *api.FragmentShader) vec4.T {
+func fragShader(u float32, v float32, col vec4.T, norm vec3.T, fragPos vec4.T, s *api.FragmentShader) vec4.T {
 	texAny, _ := s.GetUniform("tex")
 	tex := texAny.(*render.Texture)
 	texColor := tex.Sample(u, v)

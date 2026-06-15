@@ -130,7 +130,7 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO, target *render.Framebuffer) e
 			u, v,
 			vec4.T{float32(r) / 255.0, float32(g) / 255.0, float32(b) / 255.0, 1.0},
 			vec3.T{nx, ny, nz},
-			vec3.T{fpx, fpy, fpz},
+			vec4.T{fpx, fpy, fpz, z},
 			s.FragShader,
 		)
 
@@ -210,11 +210,18 @@ func (s *RenderScreen) Present(mainFBO *render.Framebuffer) {
 	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
 	invSamples := 1.0 / float32(s.SSAAFactor*s.SSAAFactor)
 
+	fastClamp := func(mn, mx, v float32) float32 {
+		return max(min(v, mx), mn)
+	}
+
 	for y := 0; y < int(fh); y++ {
 		for x := 0; x < int(fw); x++ {
 			if s.SSAAFactor == 1 {
 				c := mainFBO.ColorBuffer[y*mainFBO.Width+x]
-				s.Screen.SetPixel(x, y, graphics.NewBGPixel(uint(c[0]*255), uint(c[1]*255), uint(c[2]*255), ""))
+				s.Screen.SetPixel(x, y, graphics.NewBGPixel(
+					uint(fastClamp(0, 255, c[0]*255)),
+					uint(fastClamp(0, 255, c[1]*255)),
+					uint(fastClamp(0, 255, c[2]*255)), ""))
 			} else {
 				var avgR, avgG, avgB float32
 				for sy := 0; sy < s.SSAAFactor; sy++ {
@@ -225,7 +232,11 @@ func (s *RenderScreen) Present(mainFBO *render.Framebuffer) {
 						avgB += c[2]
 					}
 				}
-				s.Screen.SetPixel(x, y, graphics.NewBGPixel(uint(avgR*invSamples*255), uint(avgG*invSamples*255), uint(avgB*invSamples*255), ""))
+				s.Screen.SetPixel(x, y, graphics.NewBGPixel(
+					uint(fastClamp(0, 255, avgR*invSamples*255)),
+					uint(fastClamp(0, 255, avgG*invSamples*255)),
+					uint(fastClamp(0, 255, avgB*invSamples*255)),
+					""))
 			}
 		}
 	}
