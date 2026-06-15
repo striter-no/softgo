@@ -92,7 +92,7 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 				tri := render.TBO{
 					V0: vertices[v3-1], V1: vertices[v2-1], V2: vertices[v1-1],
 					UV0: uv2, UV1: uv1, UV2: uv0,
-					N0: n0, N1: n1, N2: n2,
+					N0: n2, N1: n1, N2: n0,
 
 					C0: vec4.T{255, 255, 255, 1},
 					C1: vec4.T{255, 255, 255, 1},
