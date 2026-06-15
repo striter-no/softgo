@@ -67,6 +67,10 @@ func (s *RenderScreen) Clear() error {
 		return err
 	}
 
+	if s.SSAAFactor < 1 {
+		s.SSAAFactor = 1
+	}
+
 	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
 	ssaaWidth := int(fw) * s.SSAAFactor
 	ssaaHeight := int(fh) * s.SSAAFactor
@@ -87,6 +91,10 @@ func (s *RenderScreen) Clear() error {
 func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 	if s.FragShader == nil || s.VertexShader == nil {
 		return errors.New("No fragment or vertex shader set")
+	}
+
+	if s.SSAAFactor < 1 {
+		s.SSAAFactor = 1
 	}
 
 	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
@@ -174,6 +182,11 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO) error {
 }
 
 func (s *RenderScreen) Present() {
+
+	if s.SSAAFactor < 1 {
+		s.SSAAFactor = 1
+	}
+
 	fh, fw := float32(s.Screen.Height), float32(s.Screen.Width)
 	ssaaWidth := int(fw) * s.SSAAFactor
 	invSamples := 1.0 / float32(s.SSAAFactor*s.SSAAFactor)
