@@ -159,6 +159,21 @@ func (s *RenderScreen) DrawCall(mesh []render.TBO, target *render.Framebuffer) e
 		vert1 := s.VertexShader.Perform(&tbo.V1, &tbo.N1, &tbo.C1, &tbo.UV1, s.VertexShader)
 		vert2 := s.VertexShader.Perform(&tbo.V2, &tbo.N2, &tbo.C2, &tbo.UV2, s.VertexShader)
 
+		w0, w1, w2 := vert0.Pos.W(), vert1.Pos.W(), vert2.Pos.W()
+
+		if vert0.Pos[2] > w0 && vert1.Pos[2] > w1 && vert2.Pos[2] > w2 {
+			continue
+		}
+		if vert0.Pos[2] < -w0 && vert1.Pos[2] < -w1 && vert2.Pos[2] < -w2 {
+			continue
+		}
+		if vert0.Pos[0] < -w0 && vert1.Pos[0] < -w1 && vert2.Pos[0] < -w2 {
+			continue
+		}
+		if vert0.Pos[0] > w0 && vert1.Pos[0] > w1 && vert2.Pos[0] > w2 {
+			continue
+		}
+
 		clippedTris, count := render.ClipTriangle(vert0, vert1, vert2, 0.1)
 
 		for i := range count {
