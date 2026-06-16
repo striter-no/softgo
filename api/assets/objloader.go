@@ -13,7 +13,7 @@ import (
 	"github.com/ungerik/go3d/vec4"
 )
 
-func LoadOBJ(filepath string) ([]render.TBO, error) {
+func LoadOBJ(filepath string) (map[string][]render.TBO, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось открыть файл %s: %w", filepath, err)
@@ -23,7 +23,9 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 	var vertices []vec3.T
 	var uvs []vec2.T
 	var normals []vec3.T
-	var triangles []render.TBO
+
+	meshesByObject := make(map[string][]render.TBO)
+	currentObject := "default"
 
 	scanner := bufio.NewScanner(file)
 	buf := make([]byte, 0, 64*1024)
@@ -41,6 +43,10 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 		}
 
 		switch parts[0] {
+		case "o":
+			if len(parts) >= 2 {
+				currentObject = strings.Join(parts[1:], "_")
+			}
 		case "v":
 			if len(parts) >= 4 {
 				x, _ := strconv.ParseFloat(parts[1], 32)
@@ -61,6 +67,7 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 				nz, _ := strconv.ParseFloat(parts[3], 32)
 				normals = append(normals, vec3.T{float32(nx), float32(ny), float32(nz)})
 			}
+		case "usemtl":
 		case "f":
 			if len(parts) >= 4 {
 				v1, vt1, vn1 := parseFaceVertex(parts[1])
@@ -93,14 +100,13 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 					V0: vertices[v1-1], V1: vertices[v2-1], V2: vertices[v3-1],
 					UV0: uv0, UV1: uv1, UV2: uv2,
 					N0: n0, N1: n1, N2: n2,
-
-					C0: vec4.T{255, 255, 255, 1},
-					C1: vec4.T{255, 255, 255, 1},
-					C2: vec4.T{255, 255, 255, 1},
-
+					C0:      vec4.T{255, 255, 255, 255},
+					C1:      vec4.T{255, 255, 255, 255},
+					C2:      vec4.T{255, 255, 255, 255},
 					OmniDir: false,
 				}
-				triangles = append(triangles, tri)
+
+				meshesByObject[currentObject] = append(meshesByObject[currentObject], tri)
 			}
 		}
 	}
@@ -109,7 +115,7 @@ func LoadOBJ(filepath string) ([]render.TBO, error) {
 		return nil, fmt.Errorf("failed to read from file %s: %w", filepath, err)
 	}
 
-	return triangles, nil
+	return meshesByObject, nil
 }
 
 func parseFaceVertex(fv string) (vIdx, vtIdx, vnIdx int) {
