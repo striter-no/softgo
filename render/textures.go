@@ -9,6 +9,8 @@ type Texture struct {
 	Mipmaps [][][]vec4.T
 	Widths  []int
 	Heights []int
+
+	MipmapsDistanceStep float32
 }
 
 // gets pixel via UV
@@ -36,9 +38,9 @@ func (t *Texture) Sample(u, v float32) vec4.T {
 	return t.Pixels[y*t.Width+x]
 }
 
-func (t *Texture) SampleLod(u, v float32, distance float32, sampleStep int) vec4.T {
+func (t *Texture) SampleLod(u, v float32, distance float32) vec4.T {
 
-	lod := max(int(distance/float32(sampleStep)), 0)
+	lod := max(int(distance/t.MipmapsDistanceStep), 0)
 	if lod >= len(t.Mipmaps) {
 		lod = len(t.Mipmaps) - 1
 	}
@@ -58,11 +60,12 @@ func (t *Texture) SampleLod(u, v float32, distance float32, sampleStep int) vec4
 	return t.Mipmaps[lod][y][x]
 }
 
-func (t *Texture) GenerateMipmaps(maxLevels int) {
+func (t *Texture) GenerateMipmaps(maxLevels int, distanceStep float32) {
 	if t.Width == 0 || t.Height == 0 || len(t.Pixels) == 0 {
 		return
 	}
 
+	t.MipmapsDistanceStep = distanceStep
 	t.Mipmaps = make([][][]vec4.T, 0)
 	t.Widths = make([]int, 0)
 	t.Heights = make([]int, 0)

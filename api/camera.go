@@ -44,7 +44,7 @@ func NewCamera(position vec3.T, sensivity float32, speed float32, mouse mouse.Wi
 	}
 }
 
-func (c *Camera) UpdateOnHID(aspect float32) {
+func (c *Camera) UpdateOnHID(aspect float32, movement bool) {
 	if !c.Locked {
 		return
 	}
@@ -80,30 +80,33 @@ func (c *Camera) UpdateOnHID(aspect float32) {
 	worldUp := mgl32.Vec3{0, 1, 0}
 	right := forward.Cross(worldUp).Normalize()
 
-	if c.keyboard.IsKeyPressed(keyboard.KeyW) { // forward
-		c.Position[0] += forward.X() * c.Speed
-		c.Position[1] += forward.Y() * c.Speed
-		c.Position[2] += forward.Z() * c.Speed
-	} else if c.keyboard.IsKeyPressed(keyboard.KeyS) { // backwards
-		c.Position[0] -= forward.X() * c.Speed
-		c.Position[1] -= forward.Y() * c.Speed
-		c.Position[2] -= forward.Z() * c.Speed
-	}
+	if movement {
+		if c.keyboard.IsKeyPressed(keyboard.KeyW) { // forward
+			c.Position[0] += forward.X() * c.Speed
+			c.Position[1] += forward.Y() * c.Speed
+			c.Position[2] += forward.Z() * c.Speed
+		} else if c.keyboard.IsKeyPressed(keyboard.KeyS) { // backwards
+			c.Position[0] -= forward.X() * c.Speed
+			c.Position[1] -= forward.Y() * c.Speed
+			c.Position[2] -= forward.Z() * c.Speed
+		}
 
-	if c.keyboard.IsKeyPressed(keyboard.KeyA) { // left
-		c.Position[0] -= right.X() * c.Speed
-		c.Position[1] -= right.Y() * c.Speed
-		c.Position[2] -= right.Z() * c.Speed
-	} else if c.keyboard.IsKeyPressed(keyboard.KeyD) { // right
-		c.Position[0] += right.X() * c.Speed
-		c.Position[1] += right.Y() * c.Speed
-		c.Position[2] += right.Z() * c.Speed
-	}
+		if c.keyboard.IsKeyPressed(keyboard.KeyA) { // left
+			c.Position[0] -= right.X() * c.Speed
+			c.Position[1] -= right.Y() * c.Speed
+			c.Position[2] -= right.Z() * c.Speed
+		} else if c.keyboard.IsKeyPressed(keyboard.KeyD) { // right
+			c.Position[0] += right.X() * c.Speed
+			c.Position[1] += right.Y() * c.Speed
+			c.Position[2] += right.Z() * c.Speed
+		}
 
-	if c.keyboard.IsKeyPressed(keyboard.KeyE) { // up
-		c.Position[1] += c.Speed
-	} else if c.keyboard.IsKeyPressed(keyboard.KeyQ) { // down
-		c.Position[1] -= c.Speed
+		if c.keyboard.IsKeyPressed(keyboard.KeyE) { // up
+			c.Position[1] += c.Speed
+		} else if c.keyboard.IsKeyPressed(keyboard.KeyQ) { // down
+			c.Position[1] -= c.Speed
+		}
+
 	}
 
 	proj := mgl32.Perspective(mgl32.DegToRad(c.FOV), aspect, c.Near, c.Far)

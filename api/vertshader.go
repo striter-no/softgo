@@ -11,10 +11,10 @@ import (
 
 type VertexShader struct {
 	Params  map[string]any
-	Perform func(pos *vec3.T, norm *vec3.T, color *vec4.T, uv *vec2.T, shader *VertexShader) render.VertexOut
+	Perform func(pos vec3.T, norm vec3.T, color vec4.T, uv vec2.T, shader *VertexShader) render.VertexOut
 }
 
-func NewVertexShader(pxFunc func(pos *vec3.T, norm *vec3.T, color *vec4.T, uv *vec2.T, shader *VertexShader) render.VertexOut) *VertexShader {
+func NewVertexShader(pxFunc func(pos vec3.T, norm vec3.T, color vec4.T, uv vec2.T, shader *VertexShader) render.VertexOut) *VertexShader {
 	return &VertexShader{
 		Params:  make(map[string]any, 0),
 		Perform: pxFunc,

@@ -189,7 +189,7 @@ func fragShader(u float32, v float32, col vec4.T, norm vec3.T, fragPos vec4.T, s
 
 	if diffuse > 0 {
 		viewPosAny, _ := s.GetUniform("viewPos")
-		viewPos := viewPosAny.(*vec3.T)
+		viewPos := viewPosAny.(vec3.T)
 
 		viewDir := vec3.T{viewPos[0] - fragPos[0], viewPos[1] - fragPos[1], viewPos[2] - fragPos[2]}
 		lenV := float32(math.Sqrt(float64(viewDir[0]*viewDir[0] + viewDir[1]*viewDir[1] + viewDir[2]*viewDir[2])))
@@ -233,7 +233,7 @@ func fragShader(u float32, v float32, col vec4.T, norm vec3.T, fragPos vec4.T, s
 	}
 }
 
-func vertShader(vert *vec3.T, normal *vec3.T, color *vec4.T, uv *vec2.T, s *api.VertexShader) render.VertexOut {
+func vertShader(vert vec3.T, normal vec3.T, color vec4.T, uv vec2.T, s *api.VertexShader) render.VertexOut {
 	mvpAny, _ := s.GetUniform("mvp")
 	mvp := mvpAny.(*mgl32.Mat4)
 

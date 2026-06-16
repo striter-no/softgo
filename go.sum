@@ -10,6 +10,8 @@ github.com/striter-no/stg v0.0.0-20260615145345-03ce5868c64a h1:29q9PJ9jIK3MdRKZ
 github.com/striter-no/stg v0.0.0-20260615145345-03ce5868c64a/go.mod h1:S2gACip2w2KlRiL9TN+hO0SwDcfRgx4xmER/3J94Fe8=
 github.com/striter-no/stg v0.0.0-20260615151033-8568c566e552 h1:G6bvB5mTrLb+7xCIePQHcLKws6gilzyQ3u7mpPf1zJ8=
 github.com/striter-no/stg v0.0.0-20260615151033-8568c566e552/go.mod h1:S2gACip2w2KlRiL9TN+hO0SwDcfRgx4xmER/3J94Fe8=
+github.com/striter-no/stg v0.0.0-20260616102320-4b69d6e93906 h1:3Xpnl+BFetcuIwgXgQCe3h5wYrFr9bMy1DFswzk3iOo=
+github.com/striter-no/stg v0.0.0-20260616102320-4b69d6e93906/go.mod h1:S2gACip2w2KlRiL9TN+hO0SwDcfRgx4xmER/3J94Fe8=
 github.com/ungerik/go3d v0.0.0-20251020194721-1bde1320d420 h1:Ziz6uKC//mt/aOs61IMzk+a7XyMzTaMcJBQFwUx2LXc=
 github.com/ungerik/go3d v0.0.0-20251020194721-1bde1320d420/go.mod h1:4OT7jWjZCxpaqXQHhYO54/UBbHpEuw0OCx8nIS8rvyI=
 golang.org/x/sys v0.46.0 h1:noSf2Fq6F8DBgS+LysIkx7rIExoNHJsxOAtPp4rthXw=
